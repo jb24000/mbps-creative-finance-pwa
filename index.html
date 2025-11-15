@@ -1,0 +1,295 @@
+<script>
+  // --- Utility helpers ---
+  function num(id) {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const v = parseFloat(el.value);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function fmtCurrency(value) {
+    if (!isFinite(value)) return "$0";
+    return value.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    });
+  }
+
+  function fmtPercent(value) {
+    if (!isFinite(value)) return "0%";
+    return (value * 100).toFixed(1) + "%";
+  }
+
+  // Standard amortizing payment
+  function calcPayment(principal, annualRate, years) {
+    const r = annualRate / 100 / 12;
+    const n = years * 12;
+    if (r === 0 || n === 0) {
+      return n === 0 ? 0 : principal / n;
+    }
+    return (principal * r) / (1 - Math.pow(1 + r, -n));
+  }
+
+  // Remaining balance after t years on amortizing loan
+  function remainingBalance(principal, annualRate, amortYears, yearsElapsed) {
+    const r = annualRate / 100 / 12;
+    const n = amortYears * 12;
+    const t = yearsElapsed * 12;
+    if (r === 0) {
+      const paid = (principal / n) * t;
+      return Math.max(principal - paid, 0);
+    }
+    const pmt = calcPayment(principal, annualRate, amortYears);
+    return principal * Math.pow(1 + r, t) - pmt * ((Math.pow(1 + r, t) - 1) / r);
+  }
+
+  // --- Tabs ---
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.getAttribute("data-target");
+
+      document.querySelectorAll(".tab-btn").forEach((b) => {
+        b.classList.remove("bg-emerald-500", "text-slate-900", "shadow-md");
+        b.classList.add("text-slate-300");
+      });
+      btn.classList.add("bg-emerald-500", "text-slate-900", "shadow-md");
+      btn.classList.remove("text-slate-300");
+
+      document.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.add("hidden");
+      });
+      document.getElementById(target).classList.remove("hidden");
+    });
+  });
+
+  // --- SUBJECT TO CALC ---
+  function calcSubjectTo() {
+    const arv = num("subto-arv");
+    const price = num("subto-purchase-price");
+    const cashToSeller = num("subto-cash-to-seller");
+    const closingCosts = num("subto-closing-costs");
+    const loanBalance = num("subto-loan-balance");
+    const rate = num("subto-loan-rate");
+    const years = num("subto-loan-years");
+    let loanPayment = num("subto-loan-payment");
+
+    const cashAtClosing = num("subto-cash-at-closing"); // lump sum to you
+
+    const vacMaintPct = num("subto-vac-maint-pct") / 100;
+    const otherExp = num("subto-other-exp");
+
+    const rent = num("subto-rent");
+    const taxesIns = num("subto-taxes-ins");
+    const hoa = num("subto-hoa");
+    const mgmtUtils = num("subto-mgmt-utils");
+
+    // auto-calc P&I if not entered
+    if (loanPayment === 0 && loanBalance > 0 && rate >= 0 && years > 0) {
+      loanPayment = calcPayment(loanBalance, rate, years);
+      document.getElementById("subto-loan-payment").value = Math.round(loanPayment);
+    }
+
+    const vacMaint = rent * vacMaintPct;
+    const totalExpenses =
+      loanPayment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint;
+
+    const monthlyCashflow = rent - totalExpenses;
+    const annualCashflow = monthlyCashflow * 12;
+
+    const rawCashNeeded = cashToSeller + closingCosts;
+    const netCashNeeded = rawCashNeeded - cashAtClosing; // can be negative (you get paid)
+    const netAtClosing = cashAtClosing - rawCashNeeded;  // wholesale profit
+
+    const equityAtPurchase = arv - (loanBalance + cashToSeller + closingCosts);
+
+    const coc = netCashNeeded > 0 ? annualCashflow / netCashNeeded : 0;
+
+    // KPI bar
+    document.getElementById("subto-kpi-cashflow").textContent =
+      fmtCurrency(monthlyCashflow);
+    document.getElementById("subto-kpi-cash-needed").textContent =
+      fmtCurrency(netCashNeeded);
+    document.getElementById("subto-kpi-coc").textContent = fmtPercent(coc);
+    document.getElementById("subto-kpi-equity").textContent =
+      fmtCurrency(equityAtPurchase);
+
+    // Summary
+    document.getElementById("subto-summary-raw-cash").textContent =
+      fmtCurrency(rawCashNeeded);
+    document.getElementById("subto-summary-cash-at-closing").textContent =
+      fmtCurrency(cashAtClosing);
+    document.getElementById("subto-summary-cash").textContent =
+      fmtCurrency(netCashNeeded);
+    document.getElementById("subto-summary-net-closing").textContent =
+      fmtCurrency(netAtClosing);
+    document.getElementById("subto-summary-total-payment").textContent =
+      fmtCurrency(totalExpenses);
+    document.getElementById("subto-summary-cashflow").textContent =
+      fmtCurrency(monthlyCashflow);
+    document.getElementById("subto-summary-annual").textContent =
+      fmtCurrency(annualCashflow);
+    document.getElementById("subto-summary-coc").textContent =
+      fmtPercent(coc);
+    document.getElementById("subto-summary-equity").textContent =
+      fmtCurrency(equityAtPurchase);
+
+    // --- Deal indicator with YOUR thresholds ---
+    // Min $500/mo cashflow
+    // Min $15k lump sum to you (cashAtClosing)
+    // Min $15k wholesale profit (netAtClosing)
+    const badge = document.getElementById("subto-deal-indicator");
+    let text = "Needs Analysis";
+    let cls = "bg-slate-800 text-slate-200";
+
+    if (
+      monthlyCashflow >= 500 &&
+      cashAtClosing >= 15000 &&
+      netAtClosing >= 15000
+    ) {
+      text = "Pursue Deal";
+      cls = "bg-emerald-500 text-slate-900";
+    } else if (
+      monthlyCashflow >= 250 &&
+      netAtClosing >= 0
+    ) {
+      text = "Consider / Renegotiate";
+      cls = "bg-amber-400 text-slate-950";
+    } else {
+      text = "Pass or Renegotiate";
+      cls = "bg-rose-500 text-slate-50";
+    }
+    badge.textContent = text;
+    badge.className =
+      "px-3 py-1 rounded-full text-xs font-semibold " + cls;
+  }
+
+  document
+    .getElementById("subto-calc-btn")
+    .addEventListener("click", calcSubjectTo);
+
+  // --- SELLER FINANCE CALC ---
+  function calcSellerFinance() {
+    const arv = num("seller-arv");
+    const price = num("seller-purchase-price");
+    const down = num("seller-down");
+    const closingCosts = num("seller-closing-costs");
+    const vacMaintPct = num("seller-vac-maint-pct") / 100;
+    const otherExp = num("seller-other-exp");
+
+    const cashAtClosing = num("seller-cash-at-closing"); // lump sum to you
+
+    const rate = num("seller-rate");
+    const amortYears = num("seller-amort-years");
+    const balloonYears = num("seller-balloon-years");
+    let loanAmount = num("seller-loan-amount");
+
+    const rent = num("seller-rent");
+    const taxesIns = num("seller-taxes-ins");
+    const hoa = num("seller-hoa");
+    const mgmtUtils = num("seller-mgmt-utils");
+
+    // auto-calc loan amount if empty
+    if (loanAmount === 0 && price > 0) {
+      loanAmount = Math.max(price - down, 0);
+      document.getElementById("seller-loan-amount").value =
+        Math.round(loanAmount);
+    }
+
+    const payment =
+      loanAmount > 0 && rate >= 0 && amortYears > 0
+        ? calcPayment(loanAmount, rate, amortYears)
+        : 0;
+
+    const vacMaint = rent * vacMaintPct;
+    const totalExpenses =
+      payment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint;
+
+    const monthlyCashflow = rent - totalExpenses;
+    const annualCashflow = monthlyCashflow * 12;
+
+    const rawCashNeeded = down + closingCosts;
+    const netCashNeeded = rawCashNeeded - cashAtClosing;
+    const netAtClosing = cashAtClosing - rawCashNeeded;
+
+    const equityAtPurchase = arv - price;
+
+    const coc = netCashNeeded > 0 ? annualCashflow / netCashNeeded : 0;
+
+    // Balloon balance at end of term
+    const balloon =
+      loanAmount > 0 && rate >= 0 && amortYears > 0 && balloonYears > 0
+        ? remainingBalance(loanAmount, rate, amortYears, balloonYears)
+        : 0;
+
+    // KPI bar
+    document.getElementById("seller-kpi-cashflow").textContent =
+      fmtCurrency(monthlyCashflow);
+    document.getElementById("seller-kpi-cash-needed").textContent =
+      fmtCurrency(netCashNeeded);
+    document.getElementById("seller-kpi-coc").textContent = fmtPercent(coc);
+    document.getElementById("seller-kpi-equity").textContent =
+      fmtCurrency(equityAtPurchase);
+
+    // Summary
+    document.getElementById("seller-summary-raw-cash").textContent =
+      fmtCurrency(rawCashNeeded);
+    document.getElementById("seller-summary-cash-at-closing").textContent =
+      fmtCurrency(cashAtClosing);
+    document.getElementById("seller-summary-cash").textContent =
+      fmtCurrency(netCashNeeded);
+    document.getElementById("seller-summary-net-closing").textContent =
+      fmtCurrency(netAtClosing);
+    document.getElementById("seller-summary-payment").textContent =
+      fmtCurrency(payment);
+    document.getElementById("seller-summary-balloon").textContent =
+      fmtCurrency(balloon);
+    document.getElementById("seller-summary-cashflow").textContent =
+      fmtCurrency(monthlyCashflow);
+    document.getElementById("seller-summary-annual").textContent =
+      fmtCurrency(annualCashflow);
+    document.getElementById("seller-summary-coc").textContent =
+      fmtPercent(coc);
+    document.getElementById("seller-summary-equity").textContent =
+      fmtCurrency(equityAtPurchase);
+
+    // --- Deal indicator with YOUR thresholds ---
+    const badge = document.getElementById("seller-deal-indicator");
+    let text = "Needs Analysis";
+    let cls = "bg-slate-800 text-slate-200";
+
+    if (
+      monthlyCashflow >= 500 &&
+      cashAtClosing >= 15000 &&
+      netAtClosing >= 15000
+    ) {
+      text = "Pursue Deal";
+      cls = "bg-emerald-500 text-slate-900";
+    } else if (
+      monthlyCashflow >= 250 &&
+      netAtClosing >= 0
+    ) {
+      text = "Consider / Renegotiate";
+      cls = "bg-amber-400 text-slate-950";
+    } else {
+      text = "Pass or Renegotiate";
+      cls = "bg-rose-500 text-slate-50";
+    }
+    badge.textContent = text;
+    badge.className =
+      "px-3 py-1 rounded-full text-xs font-semibold " + cls;
+  }
+
+  document
+    .getElementById("seller-calc-btn")
+    .addEventListener("click", calcSellerFinance);
+
+  // --- Service worker registration (PWA) ---
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .catch((err) => console.log("SW registration failed", err));
+    });
+  }
+</script>
