@@ -1,295 +1,1061 @@
-<script>
-  // --- Utility helpers ---
-  function num(id) {
-    const el = document.getElementById(id);
-    if (!el) return 0;
-    const v = parseFloat(el.value);
-    return isNaN(v) ? 0 : v;
-  }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MBPS REI Pro - Creative Finance Deal Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#020617" />
 
-  function fmtCurrency(value) {
-    if (!isFinite(value)) return "$0";
-    return value.toLocaleString(undefined, {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    });
-  }
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.webmanifest" />
 
-  function fmtPercent(value) {
-    if (!isFinite(value)) return "0%";
-    return (value * 100).toFixed(1) + "%";
-  }
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <div class="max-w-6xl mx-auto px-4 py-6 md:py-10">
+    <!-- Header -->
+    <header class="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">
+          MBPS REI Pro
+        </h1>
+        <p class="text-sm md:text-base text-slate-400">
+          Creative Finance &amp; Wholesale Subject To Analyzer
+        </p>
+      </div>
+      <div class="flex flex-col items-start md:items-end gap-2">
+        <div class="inline-flex items-center gap-2 rounded-full bg-slate-900/80 border border-slate-800 px-4 py-2">
+          <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-xs md:text-sm text-slate-300">
+            Deal Sprint &bull; Creative Finance Mode
+          </span>
+        </div>
 
-  // Standard amortizing payment
-  function calcPayment(principal, annualRate, years) {
-    const r = annualRate / 100 / 12;
-    const n = years * 12;
-    if (r === 0 || n === 0) {
-      return n === 0 ? 0 : principal / n;
+        <!-- Buy Box Toggle -->
+        <div class="inline-flex rounded-full bg-slate-900/80 border border-slate-800 p-1 text-xs md:text-sm">
+          <button
+            id="buybox-v1-btn"
+            class="px-3 py-1.5 rounded-full font-medium bg-emerald-500 text-slate-900 shadow"
+          >
+            MB Buy Box v1 (Strict)
+          </button>
+          <button
+            id="buybox-v2-btn"
+            class="px-3 py-1.5 rounded-full font-medium text-slate-300"
+          >
+            MB Buy Box v2 (Flexible)
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="mb-4 md:mb-6 inline-flex rounded-full bg-slate-900/80 border border-slate-800 p-1">
+      <button
+        id="tab-subto"
+        class="tab-btn px-4 py-2 text-xs md:text-sm rounded-full font-medium bg-emerald-500 text-slate-900 shadow-md"
+        data-target="panel-subto"
+      >
+        Subject To
+      </button>
+      <button
+        id="tab-seller"
+        class="tab-btn px-4 py-2 text-xs md:text-sm rounded-full font-medium text-slate-300"
+        data-target="panel-seller"
+      >
+        Seller Finance
+      </button>
+    </div>
+
+    <!-- Panels Wrapper -->
+    <div class="space-y-6 md:space-y-8">
+      <!-- SUBJECT TO PANEL -->
+      <section id="panel-subto" class="tab-panel">
+        <!-- KPI Bar -->
+        <div class="grid md:grid-cols-4 gap-3 mb-3">
+          <div class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3">
+            <p class="text-xs text-slate-400 uppercase tracking-wide">
+              Monthly Cashflow
+            </p>
+            <p id="subto-kpi-cashflow" class="text-xl font-semibold mt-1">
+              $0
+            </p>
+          </div>
+          <div class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3">
+            <p class="text-xs text-slate-400 uppercase tracking-wide">
+              Net Cash Needed
+            </p>
+            <p id="subto-kpi-cash-needed" class="text-xl font-semibold mt-1">
+              $0
+            </p>
+          </div>
+          <div class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3">
+            <p class="text-xs text-slate-400 uppercase tracking-wide">
+              Cash-on-Cash Return
+            </p>
+            <p id="subto-kpi-coc" class="text-xl font-semibold mt-1">
+              0%
+            </p>
+          </div>
+          <div class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3">
+            <p class="text-xs text-slate-400 uppercase tracking-wide">
+              Equity at Purchase
+            </p>
+            <p id="subto-kpi-equity" class="text-xl font-semibold mt-1">
+              $0
+            </p>
+          </div>
+        </div>
+
+        <!-- Deal Indicator + Strategy Badge + Summary -->
+        <div class="mb-4 rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3 flex flex-col gap-2">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <p class="text-xs md:text-sm text-slate-300">
+              Subject To Deal Indicator
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span
+                id="subto-deal-indicator"
+                class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200"
+              >
+                Needs Analysis
+              </span>
+              <span
+                id="subto-strategy-indicator"
+                class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200"
+              >
+                Strategy: Not Tagged
+              </span>
+            </div>
+          </div>
+          <p
+            id="subto-strategy-summary"
+            class="mt-1 text-[11px] md:text-xs text-slate-400"
+          >
+            Run the numbers to see the best play for this deal.
+          </p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-4 md:gap-6">
+          <!-- Left: Deal + Financing -->
+          <div class="lg:col-span-2 space-y-4">
+            <!-- Property / Deal Inputs -->
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5">
+              <h2 class="text-sm md:text-base font-semibold mb-3 flex items-center justify-between">
+                Subject To - Deal Basics
+                <span class="text-[11px] text-slate-400">
+                  ARV / Price / Cash to Seller / Wholesale
+                </span>
+              </h2>
+              <div class="grid md:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">ARV ($)</label>
+                  <input id="subto-arv" type="number" class="field" placeholder="300000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Purchase Price ($)</label>
+                  <input id="subto-purchase-price" type="number" class="field" placeholder="260000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Cash to Seller / Assignment ($)</label>
+                  <input id="subto-cash-to-seller" type="number" class="field" placeholder="15000" />
+                </div>
+              </div>
+              <div class="grid md:grid-cols-4 gap-3 mt-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Closing / Reinstatement Costs ($)</label>
+                  <input id="subto-closing-costs" type="number" class="field" placeholder="8000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">% of Rent for Vac/Maint</label>
+                  <input id="subto-vac-maint-pct" type="number" class="field" placeholder="10" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Other Monthly Expenses ($)</label>
+                  <input id="subto-other-exp" type="number" class="field" placeholder="0" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Cash You Receive at Closing ($)</label>
+                  <input id="subto-cash-at-closing" type="number" class="field" placeholder="0" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Underlying Loan -->
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5">
+              <h2 class="text-sm md:text-base font-semibold mb-3 flex items-center justify-between">
+                Underlying Loan (Seller’s Existing Mortgage)
+                <span class="text-[11px] text-slate-400">Balance / Rate / Remaining Term</span>
+              </h2>
+              <div class="grid md:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Current Loan Balance ($)</label>
+                  <input id="subto-loan-balance" type="number" class="field" placeholder="230000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Interest Rate (%)</label>
+                  <input id="subto-loan-rate" type="number" class="field" placeholder="3" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Remaining Term (yrs)</label>
+                  <input id="subto-loan-years" type="number" class="field" placeholder="25" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Monthly P&amp;I Payment ($)</label>
+                  <input id="subto-loan-payment" type="number" class="field" placeholder="auto" />
+                </div>
+              </div>
+              <p class="mt-2 text-[11px] text-slate-500">
+                Leave <span class="font-semibold">Monthly P&amp;I Payment</span> blank to auto-calc from
+                balance / rate / term.
+              </p>
+            </div>
+          </div>
+
+          <!-- Right: Income & Expenses + Summary -->
+          <div class="space-y-4">
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5">
+              <h2 class="text-sm md:text-base font-semibold mb-3">
+                Income &amp; Operating Expenses
+              </h2>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Monthly Rent ($)</label>
+                  <input id="subto-rent" type="number" class="field" placeholder="2400" />
+                </div>
+                <div class="grid md:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-xs text-slate-400 mb-1">
+                      Taxes &amp; Insurance ($/mo)
+                    </label>
+                    <input id="subto-taxes-ins" type="number" class="field" placeholder="350" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-slate-400 mb-1">HOA ($/mo)</label>
+                    <input id="subto-hoa" type="number" class="field" placeholder="0" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-slate-400 mb-1">Mgmt / Utilities ($/mo)</label>
+                    <input id="subto-mgmt-utils" type="number" class="field" placeholder="0" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              id="subto-calc-btn"
+              class="w-full rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold py-3 text-sm shadow-lg shadow-emerald-500/20 transition"
+            >
+              Calculate Subject To Deal
+            </button>
+
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5 text-xs md:text-sm">
+              <h3 class="font-semibold mb-2">Subject To &amp; Wholesale Summary</h3>
+              <ul class="space-y-1 text-slate-300">
+                <li>
+                  Raw Cash Needed (Seller + Closing):
+                  <span id="subto-summary-raw-cash" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Cash You Receive at Closing:
+                  <span id="subto-summary-cash-at-closing" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Net Cash Needed (After Cash In):
+                  <span id="subto-summary-cash" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Net at Closing / Wholesale Profit:
+                  <span id="subto-summary-net-closing" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Total Monthly Payment (P&amp;I + T/I + HOA + Other):
+                  <span id="subto-summary-total-payment" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Monthly Cashflow:
+                  <span id="subto-summary-cashflow" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Annual Cashflow:
+                  <span id="subto-summary-annual" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Cash-on-Cash Return:
+                  <span id="subto-summary-coc" class="font-semibold">0%</span>
+                </li>
+                <li>
+                  Equity at Purchase:
+                  <span id="subto-summary-equity" class="font-semibold text-emerald-400">$0</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SELLER FINANCE PANEL -->
+      <section id="panel-seller" class="tab-panel hidden">
+        <!-- KPI Bar -->
+        <div class="grid md:grid-cols-4 gap-3 mb-3">
+          <div class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3">
+            <p class="text-xs text-slate-400 uppercase tracking-wide">
+              Monthly Cashflow
+            </p>
+            <p id="seller-kpi-cashflow" class="text-xl font-semibold mt-1">
+              $0
+            </p>
+          </div>
+          <div class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3">
+            <p class="text-xs text-slate-400 uppercase tracking-wide">
+              Net Cash Needed
+            </p>
+            <p id="seller-kpi-cash-needed" class="text-xl font-semibold mt-1">
+              $0
+            </p>
+          </div>
+          <div class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3">
+            <p class="text-xs text-slate-400 uppercase tracking-wide">
+              Cash-on-Cash Return
+            </p>
+            <p id="seller-kpi-coc" class="text-xl font-semibold mt-1">
+              0%
+            </p>
+          </div>
+          <div class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3">
+            <p class="text-xs text-slate-400 uppercase tracking-wide">
+              Equity at Purchase
+            </p>
+            <p id="seller-kpi-equity" class="text-xl font-semibold mt-1">
+              $0
+            </p>
+          </div>
+        </div>
+
+        <!-- Deal Indicator + Strategy Badge + Summary -->
+        <div class="mb-4 rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3 flex flex-col gap-2">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <p class="text-xs md:text-sm text-slate-300">
+              Seller Finance Deal Indicator
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span
+                id="seller-deal-indicator"
+                class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200"
+              >
+                Needs Analysis
+              </span>
+              <span
+                id="seller-strategy-indicator"
+                class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200"
+              >
+                Strategy: Not Tagged
+              </span>
+            </div>
+          </div>
+          <p
+            id="seller-strategy-summary"
+            class="mt-1 text-[11px] md:text-xs text-slate-400"
+          >
+            Run the numbers to see the best play for this deal.
+          </p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-4 md:gap-6">
+          <!-- Left: Deal + Financing -->
+          <div class="lg:col-span-2 space-y-4">
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5">
+              <h2 class="text-sm md:text-base font-semibold mb-3 flex items-center justify-between">
+                Seller Finance - Deal Basics
+                <span class="text-[11px] text-slate-400">
+                  ARV / Price / Down / Wholesale
+                </span>
+              </h2>
+              <div class="grid md:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">ARV ($)</label>
+                  <input id="seller-arv" type="number" class="field" placeholder="300000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Purchase Price ($)</label>
+                  <input id="seller-purchase-price" type="number" class="field" placeholder="280000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Down Payment ($)</label>
+                  <input id="seller-down" type="number" class="field" placeholder="20000" />
+                </div>
+              </div>
+              <div class="grid md:grid-cols-4 gap-3 mt-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Closing Costs ($)</label>
+                  <input id="seller-closing-costs" type="number" class="field" placeholder="8000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">% of Rent for Vac/Maint</label>
+                  <input id="seller-vac-maint-pct" type="number" class="field" placeholder="10" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Other Monthly Expenses ($)</label>
+                  <input id="seller-other-exp" type="number" class="field" placeholder="0" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Cash You Receive at Closing ($)</label>
+                  <input id="seller-cash-at-closing" type="number" class="field" placeholder="0" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Seller-Financed Note -->
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5">
+              <h2 class="text-sm md:text-base font-semibold mb-3 flex items-center justify-between">
+                Seller-Financed Note
+                <span class="text-[11px] text-slate-400">
+                  Rate / Amortization / Balloon
+                </span>
+              </h2>
+              <div class="grid md:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Interest Rate (%)</label>
+                  <input id="seller-rate" type="number" class="field" placeholder="5" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Amortization (yrs)</label>
+                  <input id="seller-amort-years" type="number" class="field" placeholder="30" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Balloon Term (yrs)</label>
+                  <input id="seller-balloon-years" type="number" class="field" placeholder="5" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Loan Amount ($)</label>
+                  <input id="seller-loan-amount" type="number" class="field" placeholder="auto" />
+                </div>
+              </div>
+              <p class="mt-2 text-[11px] text-slate-500">
+                Leave <span class="font-semibold">Loan Amount</span> blank to auto-calc as
+                <span class="font-semibold">Price - Down Payment</span>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Right: Income & Summary -->
+          <div class="space-y-4">
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5">
+              <h2 class="text-sm md:text-base font-semibold mb-3">
+                Income &amp; Operating Expenses
+              </h2>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Monthly Rent ($)</label>
+                  <input id="seller-rent" type="number" class="field" placeholder="2400" />
+                </div>
+                <div class="grid md:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-xs text-slate-400 mb-1">
+                      Taxes &amp; Insurance ($/mo)
+                    </label>
+                    <input id="seller-taxes-ins" type="number" class="field" placeholder="350" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-slate-400 mb-1">HOA ($/mo)</label>
+                    <input id="seller-hoa" type="number" class="field" placeholder="0" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-slate-400 mb-1">Mgmt / Utilities ($/mo)</label>
+                    <input id="seller-mgmt-utils" type="number" class="field" placeholder="0" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              id="seller-calc-btn"
+              class="w-full rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold py-3 text-sm shadow-lg shadow-emerald-500/20 transition"
+            >
+              Calculate Seller Finance Deal
+            </button>
+
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5 text-xs md:text-sm">
+              <h3 class="font-semibold mb-2">Seller Finance &amp; Wholesale Summary</h3>
+              <ul class="space-y-1 text-slate-300">
+                <li>
+                  Raw Cash Needed (Down + Closing):
+                  <span id="seller-summary-raw-cash" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Cash You Receive at Closing:
+                  <span id="seller-summary-cash-at-closing" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Net Cash Needed (After Cash In):
+                  <span id="seller-summary-cash" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Net at Closing / Wholesale Profit:
+                  <span id="seller-summary-net-closing" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Monthly Payment (P&amp;I Only):
+                  <span id="seller-summary-payment" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Balloon Amount (End of Term):
+                  <span id="seller-summary-balloon" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Monthly Cashflow:
+                  <span id="seller-summary-cashflow" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Annual Cashflow:
+                  <span id="seller-summary-annual" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Cash-on-Cash Return:
+                  <span id="seller-summary-coc" class="font-semibold">0%</span>
+                </li>
+                <li>
+                  Equity at Purchase:
+                  <span id="seller-summary-equity" class="font-semibold text-emerald-400">$0</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <style>
+    .field {
+      width: 100%;
+      border-radius: 0.75rem;
+      background-color: rgba(2, 6, 23, 0.8);
+      border: 1px solid #1e293b;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      color: #e5e7eb;
+      outline: none;
+      transition: border-color 0.12s ease, box-shadow 0.12s ease;
     }
-    return (principal * r) / (1 - Math.pow(1 + r, -n));
-  }
-
-  // Remaining balance after t years on amortizing loan
-  function remainingBalance(principal, annualRate, amortYears, yearsElapsed) {
-    const r = annualRate / 100 / 12;
-    const n = amortYears * 12;
-    const t = yearsElapsed * 12;
-    if (r === 0) {
-      const paid = (principal / n) * t;
-      return Math.max(principal - paid, 0);
+    .field:focus {
+      border-color: #34d399;
+      box-shadow: 0 0 0 1px #34d399;
     }
-    const pmt = calcPayment(principal, annualRate, amortYears);
-    return principal * Math.pow(1 + r, t) - pmt * ((Math.pow(1 + r, t) - 1) / r);
-  }
+  </style>
 
-  // --- Tabs ---
-  document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.getAttribute("data-target");
+  <script>
+    // --- Buy box configs ---
+    const BUY_BOXES = {
+      v1: {
+        label: "MB Buy Box v1 (Strict)",
+        minCashflow: 500,
+        minCashAtClosing: 15000,
+        minWholesale: 15000
+      },
+      v2: {
+        label: "MB Buy Box v2 (Flexible)",
+        minCashflow: 350,
+        minCashAtClosing: 10000,
+        minWholesale: 10000
+      }
+    };
 
-      document.querySelectorAll(".tab-btn").forEach((b) => {
-        b.classList.remove("bg-emerald-500", "text-slate-900", "shadow-md");
-        b.classList.add("text-slate-300");
+    let currentBuyBox = "v1";
+    let currentTab = "subto";
+
+    function getBuyBox() {
+      return BUY_BOXES[currentBuyBox];
+    }
+
+    // --- Utility helpers ---
+    function num(id) {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      const v = parseFloat(el.value);
+      return isNaN(v) ? 0 : v;
+    }
+
+    function fmtCurrency(value) {
+      if (!isFinite(value)) return "$0";
+      return value.toLocaleString(undefined, {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
       });
-      btn.classList.add("bg-emerald-500", "text-slate-900", "shadow-md");
-      btn.classList.remove("text-slate-300");
+    }
 
-      document.querySelectorAll(".tab-panel").forEach((panel) => {
-        panel.classList.add("hidden");
+    function fmtPercent(value) {
+      if (!isFinite(value)) return "0%";
+      return (value * 100).toFixed(1) + "%";
+    }
+
+    // Standard amortizing payment
+    function calcPayment(principal, annualRate, years) {
+      const r = annualRate / 100 / 12;
+      const n = years * 12;
+      if (r === 0 || n === 0) {
+        return n === 0 ? 0 : principal / n;
+      }
+      return (principal * r) / (1 - Math.pow(1 + r, -n));
+    }
+
+    // Remaining balance after t years on amortizing loan
+    function remainingBalance(principal, annualRate, amortYears, yearsElapsed) {
+      const r = annualRate / 100 / 12;
+      const n = amortYears * 12;
+      const t = yearsElapsed * 12;
+      if (r === 0) {
+        const paid = (principal / n) * t;
+        return Math.max(principal - paid, 0);
+      }
+      const pmt = calcPayment(principal, annualRate, amortYears);
+      return principal * Math.pow(1 + r, t) - pmt * ((Math.pow(1 + r, t) - 1) / r);
+    }
+
+    // --- Tabs ---
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.getAttribute("data-target");
+        currentTab = target === "panel-subto" ? "subto" : "seller";
+
+        document.querySelectorAll(".tab-btn").forEach((b) => {
+          b.classList.remove("bg-emerald-500", "text-slate-900", "shadow-md");
+          b.classList.add("text-slate-300");
+        });
+        btn.classList.add("bg-emerald-500", "text-slate-900", "shadow-md");
+        btn.classList.remove("text-slate-300");
+
+        document.querySelectorAll(".tab-panel").forEach((panel) => {
+          panel.classList.add("hidden");
+        });
+        document.getElementById(target).classList.remove("hidden");
       });
-      document.getElementById(target).classList.remove("hidden");
     });
-  });
 
-  // --- SUBJECT TO CALC ---
-  function calcSubjectTo() {
-    const arv = num("subto-arv");
-    const price = num("subto-purchase-price");
-    const cashToSeller = num("subto-cash-to-seller");
-    const closingCosts = num("subto-closing-costs");
-    const loanBalance = num("subto-loan-balance");
-    const rate = num("subto-loan-rate");
-    const years = num("subto-loan-years");
-    let loanPayment = num("subto-loan-payment");
+    // --- Buy Box Toggle ---
+    const v1Btn = document.getElementById("buybox-v1-btn");
+    const v2Btn = document.getElementById("buybox-v2-btn");
 
-    const cashAtClosing = num("subto-cash-at-closing"); // lump sum to you
-
-    const vacMaintPct = num("subto-vac-maint-pct") / 100;
-    const otherExp = num("subto-other-exp");
-
-    const rent = num("subto-rent");
-    const taxesIns = num("subto-taxes-ins");
-    const hoa = num("subto-hoa");
-    const mgmtUtils = num("subto-mgmt-utils");
-
-    // auto-calc P&I if not entered
-    if (loanPayment === 0 && loanBalance > 0 && rate >= 0 && years > 0) {
-      loanPayment = calcPayment(loanBalance, rate, years);
-      document.getElementById("subto-loan-payment").value = Math.round(loanPayment);
+    function updateBuyBoxButtons() {
+      if (currentBuyBox === "v1") {
+        v1Btn.classList.add("bg-emerald-500", "text-slate-900", "shadow");
+        v1Btn.classList.remove("text-slate-300");
+        v2Btn.classList.remove("bg-emerald-500", "text-slate-900", "shadow");
+        v2Btn.classList.add("text-slate-300");
+      } else {
+        v2Btn.classList.add("bg-emerald-500", "text-slate-900", "shadow");
+        v2Btn.classList.remove("text-slate-300");
+        v1Btn.classList.remove("bg-emerald-500", "text-slate-900", "shadow");
+        v1Btn.classList.add("text-slate-300");
+      }
     }
 
-    const vacMaint = rent * vacMaintPct;
-    const totalExpenses =
-      loanPayment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint;
-
-    const monthlyCashflow = rent - totalExpenses;
-    const annualCashflow = monthlyCashflow * 12;
-
-    const rawCashNeeded = cashToSeller + closingCosts;
-    const netCashNeeded = rawCashNeeded - cashAtClosing; // can be negative (you get paid)
-    const netAtClosing = cashAtClosing - rawCashNeeded;  // wholesale profit
-
-    const equityAtPurchase = arv - (loanBalance + cashToSeller + closingCosts);
-
-    const coc = netCashNeeded > 0 ? annualCashflow / netCashNeeded : 0;
-
-    // KPI bar
-    document.getElementById("subto-kpi-cashflow").textContent =
-      fmtCurrency(monthlyCashflow);
-    document.getElementById("subto-kpi-cash-needed").textContent =
-      fmtCurrency(netCashNeeded);
-    document.getElementById("subto-kpi-coc").textContent = fmtPercent(coc);
-    document.getElementById("subto-kpi-equity").textContent =
-      fmtCurrency(equityAtPurchase);
-
-    // Summary
-    document.getElementById("subto-summary-raw-cash").textContent =
-      fmtCurrency(rawCashNeeded);
-    document.getElementById("subto-summary-cash-at-closing").textContent =
-      fmtCurrency(cashAtClosing);
-    document.getElementById("subto-summary-cash").textContent =
-      fmtCurrency(netCashNeeded);
-    document.getElementById("subto-summary-net-closing").textContent =
-      fmtCurrency(netAtClosing);
-    document.getElementById("subto-summary-total-payment").textContent =
-      fmtCurrency(totalExpenses);
-    document.getElementById("subto-summary-cashflow").textContent =
-      fmtCurrency(monthlyCashflow);
-    document.getElementById("subto-summary-annual").textContent =
-      fmtCurrency(annualCashflow);
-    document.getElementById("subto-summary-coc").textContent =
-      fmtPercent(coc);
-    document.getElementById("subto-summary-equity").textContent =
-      fmtCurrency(equityAtPurchase);
-
-    // --- Deal indicator with YOUR thresholds ---
-    // Min $500/mo cashflow
-    // Min $15k lump sum to you (cashAtClosing)
-    // Min $15k wholesale profit (netAtClosing)
-    const badge = document.getElementById("subto-deal-indicator");
-    let text = "Needs Analysis";
-    let cls = "bg-slate-800 text-slate-200";
-
-    if (
-      monthlyCashflow >= 500 &&
-      cashAtClosing >= 15000 &&
-      netAtClosing >= 15000
-    ) {
-      text = "Pursue Deal";
-      cls = "bg-emerald-500 text-slate-900";
-    } else if (
-      monthlyCashflow >= 250 &&
-      netAtClosing >= 0
-    ) {
-      text = "Consider / Renegotiate";
-      cls = "bg-amber-400 text-slate-950";
-    } else {
-      text = "Pass or Renegotiate";
-      cls = "bg-rose-500 text-slate-50";
-    }
-    badge.textContent = text;
-    badge.className =
-      "px-3 py-1 rounded-full text-xs font-semibold " + cls;
-  }
-
-  document
-    .getElementById("subto-calc-btn")
-    .addEventListener("click", calcSubjectTo);
-
-  // --- SELLER FINANCE CALC ---
-  function calcSellerFinance() {
-    const arv = num("seller-arv");
-    const price = num("seller-purchase-price");
-    const down = num("seller-down");
-    const closingCosts = num("seller-closing-costs");
-    const vacMaintPct = num("seller-vac-maint-pct") / 100;
-    const otherExp = num("seller-other-exp");
-
-    const cashAtClosing = num("seller-cash-at-closing"); // lump sum to you
-
-    const rate = num("seller-rate");
-    const amortYears = num("seller-amort-years");
-    const balloonYears = num("seller-balloon-years");
-    let loanAmount = num("seller-loan-amount");
-
-    const rent = num("seller-rent");
-    const taxesIns = num("seller-taxes-ins");
-    const hoa = num("seller-hoa");
-    const mgmtUtils = num("seller-mgmt-utils");
-
-    // auto-calc loan amount if empty
-    if (loanAmount === 0 && price > 0) {
-      loanAmount = Math.max(price - down, 0);
-      document.getElementById("seller-loan-amount").value =
-        Math.round(loanAmount);
-    }
-
-    const payment =
-      loanAmount > 0 && rate >= 0 && amortYears > 0
-        ? calcPayment(loanAmount, rate, amortYears)
-        : 0;
-
-    const vacMaint = rent * vacMaintPct;
-    const totalExpenses =
-      payment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint;
-
-    const monthlyCashflow = rent - totalExpenses;
-    const annualCashflow = monthlyCashflow * 12;
-
-    const rawCashNeeded = down + closingCosts;
-    const netCashNeeded = rawCashNeeded - cashAtClosing;
-    const netAtClosing = cashAtClosing - rawCashNeeded;
-
-    const equityAtPurchase = arv - price;
-
-    const coc = netCashNeeded > 0 ? annualCashflow / netCashNeeded : 0;
-
-    // Balloon balance at end of term
-    const balloon =
-      loanAmount > 0 && rate >= 0 && amortYears > 0 && balloonYears > 0
-        ? remainingBalance(loanAmount, rate, amortYears, balloonYears)
-        : 0;
-
-    // KPI bar
-    document.getElementById("seller-kpi-cashflow").textContent =
-      fmtCurrency(monthlyCashflow);
-    document.getElementById("seller-kpi-cash-needed").textContent =
-      fmtCurrency(netCashNeeded);
-    document.getElementById("seller-kpi-coc").textContent = fmtPercent(coc);
-    document.getElementById("seller-kpi-equity").textContent =
-      fmtCurrency(equityAtPurchase);
-
-    // Summary
-    document.getElementById("seller-summary-raw-cash").textContent =
-      fmtCurrency(rawCashNeeded);
-    document.getElementById("seller-summary-cash-at-closing").textContent =
-      fmtCurrency(cashAtClosing);
-    document.getElementById("seller-summary-cash").textContent =
-      fmtCurrency(netCashNeeded);
-    document.getElementById("seller-summary-net-closing").textContent =
-      fmtCurrency(netAtClosing);
-    document.getElementById("seller-summary-payment").textContent =
-      fmtCurrency(payment);
-    document.getElementById("seller-summary-balloon").textContent =
-      fmtCurrency(balloon);
-    document.getElementById("seller-summary-cashflow").textContent =
-      fmtCurrency(monthlyCashflow);
-    document.getElementById("seller-summary-annual").textContent =
-      fmtCurrency(annualCashflow);
-    document.getElementById("seller-summary-coc").textContent =
-      fmtPercent(coc);
-    document.getElementById("seller-summary-equity").textContent =
-      fmtCurrency(equityAtPurchase);
-
-    // --- Deal indicator with YOUR thresholds ---
-    const badge = document.getElementById("seller-deal-indicator");
-    let text = "Needs Analysis";
-    let cls = "bg-slate-800 text-slate-200";
-
-    if (
-      monthlyCashflow >= 500 &&
-      cashAtClosing >= 15000 &&
-      netAtClosing >= 15000
-    ) {
-      text = "Pursue Deal";
-      cls = "bg-emerald-500 text-slate-900";
-    } else if (
-      monthlyCashflow >= 250 &&
-      netAtClosing >= 0
-    ) {
-      text = "Consider / Renegotiate";
-      cls = "bg-amber-400 text-slate-950";
-    } else {
-      text = "Pass or Renegotiate";
-      cls = "bg-rose-500 text-slate-50";
-    }
-    badge.textContent = text;
-    badge.className =
-      "px-3 py-1 rounded-full text-xs font-semibold " + cls;
-  }
-
-  document
-    .getElementById("seller-calc-btn")
-    .addEventListener("click", calcSellerFinance);
-
-  // --- Service worker registration (PWA) ---
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("./sw.js")
-        .catch((err) => console.log("SW registration failed", err));
+    v1Btn.addEventListener("click", () => {
+      currentBuyBox = "v1";
+      updateBuyBoxButtons();
+      // Recalc current tab with new thresholds
+      if (currentTab === "subto") {
+        calcSubjectTo();
+      } else {
+        calcSellerFinance();
+      }
     });
-  }
-</script>
+
+    v2Btn.addEventListener("click", () => {
+      currentBuyBox = "v2";
+      updateBuyBoxButtons();
+      if (currentTab === "subto") {
+        calcSubjectTo();
+      } else {
+        calcSellerFinance();
+      }
+    });
+
+    updateBuyBoxButtons();
+
+    // --- SUBJECT TO CALC ---
+    function calcSubjectTo() {
+      const cfg = getBuyBox();
+
+      const arv = num("subto-arv");
+      const price = num("subto-purchase-price");
+      const cashToSeller = num("subto-cash-to-seller");
+      const closingCosts = num("subto-closing-costs");
+      const loanBalance = num("subto-loan-balance");
+      const rate = num("subto-loan-rate");
+      const years = num("subto-loan-years");
+      let loanPayment = num("subto-loan-payment");
+
+      const cashAtClosing = num("subto-cash-at-closing"); // lump sum to you
+
+      const vacMaintPct = num("subto-vac-maint-pct") / 100;
+      const otherExp = num("subto-other-exp");
+
+      const rent = num("subto-rent");
+      const taxesIns = num("subto-taxes-ins");
+      const hoa = num("subto-hoa");
+      const mgmtUtils = num("subto-mgmt-utils");
+
+      // auto-calc P&I if not entered
+      if (loanPayment === 0 && loanBalance > 0 && rate >= 0 && years > 0) {
+        loanPayment = calcPayment(loanBalance, rate, years);
+        document.getElementById("subto-loan-payment").value = Math.round(loanPayment);
+      }
+
+      const vacMaint = rent * vacMaintPct;
+      const totalExpenses =
+        loanPayment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint;
+
+      const monthlyCashflow = rent - totalExpenses;
+      const annualCashflow = monthlyCashflow * 12;
+
+      const rawCashNeeded = cashToSeller + closingCosts;
+      const netCashNeeded = rawCashNeeded - cashAtClosing; // can be negative (you get paid)
+      const netAtClosing = cashAtClosing - rawCashNeeded;  // wholesale profit
+
+      const equityAtPurchase = arv - (loanBalance + cashToSeller + closingCosts);
+      const equityPct = arv > 0 ? equityAtPurchase / arv : 0;
+
+      const coc = netCashNeeded > 0 ? annualCashflow / netCashNeeded : 0;
+
+      // KPI bar
+      document.getElementById("subto-kpi-cashflow").textContent =
+        fmtCurrency(monthlyCashflow);
+      document.getElementById("subto-kpi-cash-needed").textContent =
+        fmtCurrency(netCashNeeded);
+      document.getElementById("subto-kpi-coc").textContent = fmtPercent(coc);
+      document.getElementById("subto-kpi-equity").textContent =
+        fmtCurrency(equityAtPurchase);
+
+      // Summary values
+      document.getElementById("subto-summary-raw-cash").textContent =
+        fmtCurrency(rawCashNeeded);
+      document.getElementById("subto-summary-cash-at-closing").textContent =
+        fmtCurrency(cashAtClosing);
+      document.getElementById("subto-summary-cash").textContent =
+        fmtCurrency(netCashNeeded);
+      document.getElementById("subto-summary-net-closing").textContent =
+        fmtCurrency(netAtClosing);
+      document.getElementById("subto-summary-total-payment").textContent =
+        fmtCurrency(totalExpenses);
+      document.getElementById("subto-summary-cashflow").textContent =
+        fmtCurrency(monthlyCashflow);
+      document.getElementById("subto-summary-annual").textContent =
+        fmtCurrency(annualCashflow);
+      document.getElementById("subto-summary-coc").textContent =
+        fmtPercent(coc);
+      document.getElementById("subto-summary-equity").textContent =
+        fmtCurrency(equityAtPurchase);
+
+      // --- Main deal indicator (uses current buy box thresholds) ---
+      const badge = document.getElementById("subto-deal-indicator");
+      let text = "Needs Analysis";
+      let cls = "bg-slate-800 text-slate-200";
+
+      if (
+        monthlyCashflow >= cfg.minCashflow &&
+        cashAtClosing >= cfg.minCashAtClosing &&
+        netAtClosing >= cfg.minWholesale
+      ) {
+        text = "Pursue Deal";
+        cls = "bg-emerald-500 text-slate-900";
+      } else if (
+        monthlyCashflow >= cfg.minCashflow / 2 &&
+        netAtClosing >= 0
+      ) {
+        text = "Consider / Renegotiate";
+        cls = "bg-amber-400 text-slate-950";
+      } else {
+        text = "Pass or Renegotiate";
+        cls = "bg-rose-500 text-slate-50";
+      }
+      badge.textContent = text;
+      badge.className =
+        "px-3 py-1 rounded-full text-xs font-semibold " + cls;
+
+      // --- Strategy badge (HOLD / WHOLESALE / NOVATION / PASS) ---
+      const stratBadge = document.getElementById("subto-strategy-indicator");
+      let stratText = "Strategy: Not Tagged";
+      let stratCls = "bg-slate-800 text-slate-200";
+
+      if (
+        monthlyCashflow >= cfg.minCashflow &&
+        netCashNeeded <= 0 &&
+        cashAtClosing >= cfg.minCashAtClosing
+      ) {
+        // Strong cashflow, none of your own cash in, nice lump sum
+        stratText = "Strategy: HOLD (Creative Finance)";
+        stratCls = "bg-sky-500 text-slate-900";
+      } else if (
+        netAtClosing >= cfg.minWholesale &&
+        monthlyCashflow < cfg.minCashflow
+      ) {
+        // Big wholesale check, but not a strong hold
+        stratText = "Strategy: WHOLESALE";
+        stratCls = "bg-violet-500 text-slate-50";
+      } else if (
+        cashAtClosing >= cfg.minCashAtClosing &&
+        equityPct >= 0.10 &&
+        monthlyCashflow < cfg.minCashflow
+      ) {
+        // Strong equity and payday, but not a great long-term cash machine
+        stratText = "Strategy: NOVATION / HOTELING";
+        stratCls = "bg-amber-400 text-slate-950";
+      } else {
+        stratText = "Strategy: PASS / MOVE ON";
+        stratCls = "bg-slate-700 text-slate-100";
+      }
+
+      stratBadge.textContent = stratText;
+      stratBadge.className =
+        "px-3 py-1 rounded-full text-xs font-semibold " + stratCls;
+
+      // ✅ SUMMARY SENTENCE
+      const summaryElSub = document.getElementById("subto-strategy-summary");
+      let summarySub = "";
+
+      if (
+        monthlyCashflow >= cfg.minCashflow &&
+        netCashNeeded <= 0 &&
+        cashAtClosing >= cfg.minCashAtClosing
+      ) {
+        summarySub =
+          "Strong creative hold. " +
+          fmtCurrency(cashAtClosing) +
+          " to you at closing and about " +
+          fmtCurrency(monthlyCashflow) +
+          " per month in cashflow. Lock it up.";
+      } else if (
+        netAtClosing >= cfg.minWholesale &&
+        monthlyCashflow < cfg.minCashflow
+      ) {
+        summarySub =
+          "Best play: WHOLESALE. Target around " +
+          fmtCurrency(netAtClosing) +
+          " at closing. Don’t keep this one as a long-term hold.";
+      } else if (
+        cashAtClosing >= cfg.minCashAtClosing &&
+        equityPct >= 0.10 &&
+        monthlyCashflow < cfg.minCashflow
+      ) {
+        summarySub =
+          "Best play: NOVATION / HOTELING. Use creative terms, improve the property, and exit for equity plus about " +
+          fmtCurrency(cashAtClosing) +
+          " at closing.";
+      } else {
+        summarySub =
+          "Doesn’t meet your buy box yet. Only pursue if you can improve price or terms enough to boost cashflow or wholesale profit.";
+      }
+
+      summaryElSub.textContent = summarySub;
+    }
+
+    document
+      .getElementById("subto-calc-btn")
+      .addEventListener("click", calcSubjectTo);
+
+    // --- SELLER FINANCE CALC ---
+    function calcSellerFinance() {
+      const cfg = getBuyBox();
+
+      const arv = num("seller-arv");
+      const price = num("seller-purchase-price");
+      const down = num("seller-down");
+      const closingCosts = num("seller-closing-costs");
+      const vacMaintPct = num("seller-vac-maint-pct") / 100;
+      const otherExp = num("seller-other-exp");
+
+      const cashAtClosing = num("seller-cash-at-closing"); // lump sum to you
+
+      const rate = num("seller-rate");
+      const amortYears = num("seller-amort-years");
+      const balloonYears = num("seller-balloon-years");
+      let loanAmount = num("seller-loan-amount");
+
+      const rent = num("seller-rent");
+      const taxesIns = num("seller-taxes-ins");
+      const hoa = num("seller-hoa");
+      const mgmtUtils = num("seller-mgmt-utils");
+
+      // auto-calc loan amount if empty
+      if (loanAmount === 0 && price > 0) {
+        loanAmount = Math.max(price - down, 0);
+        document.getElementById("seller-loan-amount").value =
+          Math.round(loanAmount);
+      }
+
+      const payment =
+        loanAmount > 0 && rate >= 0 && amortYears > 0
+          ? calcPayment(loanAmount, rate, amortYears)
+          : 0;
+
+      const vacMaint = rent * vacMaintPct;
+      const totalExpenses =
+        payment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint;
+
+      const monthlyCashflow = rent - totalExpenses;
+      const annualCashflow = monthlyCashflow * 12;
+
+      const rawCashNeeded = down + closingCosts;
+      const netCashNeeded = rawCashNeeded - cashAtClosing;
+      const netAtClosing = cashAtClosing - rawCashNeeded;
+
+      const equityAtPurchase = arv - price;
+      const equityPct = arv > 0 ? equityAtPurchase / arv : 0;
+
+      const coc = netCashNeeded > 0 ? annualCashflow / netCashNeeded : 0;
+
+      // Balloon balance at end of term
+      const balloon =
+        loanAmount > 0 && rate >= 0 && amortYears > 0 && balloonYears > 0
+          ? remainingBalance(loanAmount, rate, amortYears, balloonYears)
+          : 0;
+
+      // KPI bar
+      document.getElementById("seller-kpi-cashflow").textContent =
+        fmtCurrency(monthlyCashflow);
+      document.getElementById("seller-kpi-cash-needed").textContent =
+        fmtCurrency(netCashNeeded);
+      document.getElementById("seller-kpi-coc").textContent = fmtPercent(coc);
+      document.getElementById("seller-kpi-equity").textContent =
+        fmtCurrency(equityAtPurchase);
+
+      // Summary
+      document.getElementById("seller-summary-raw-cash").textContent =
+        fmtCurrency(rawCashNeeded);
+      document.getElementById("seller-summary-cash-at-closing").textContent =
+        fmtCurrency(cashAtClosing);
+      document.getElementById("seller-summary-cash").textContent =
+        fmtCurrency(netCashNeeded);
+      document.getElementById("seller-summary-net-closing").textContent =
+        fmtCurrency(netAtClosing);
+      document.getElementById("seller-summary-payment").textContent =
+        fmtCurrency(payment);
+      document.getElementById("seller-summary-balloon").textContent =
+        fmtCurrency(balloon);
+      document.getElementById("seller-summary-cashflow").textContent =
+        fmtCurrency(monthlyCashflow);
+      document.getElementById("seller-summary-annual").textContent =
+        fmtCurrency(annualCashflow);
+      document.getElementById("seller-summary-coc").textContent =
+        fmtPercent(coc);
+      document.getElementById("seller-summary-equity").textContent =
+        fmtCurrency(equityAtPurchase);
+
+      // --- Main deal indicator with buy box thresholds ---
+      const badge = document.getElementById("seller-deal-indicator");
+      let text = "Needs Analysis";
+      let cls = "bg-slate-800 text-slate-200";
+
+      if (
+        monthlyCashflow >= cfg.minCashflow &&
+        cashAtClosing >= cfg.minCashAtClosing &&
+        netAtClosing >= cfg.minWholesale
+      ) {
+        text = "Pursue Deal";
+        cls = "bg-emerald-500 text-slate-900";
+      } else if (
+        monthlyCashflow >= cfg.minCashflow / 2 &&
+        netAtClosing >= 0
+      ) {
+        text = "Consider / Renegotiate";
+        cls = "bg-amber-400 text-slate-950";
+      } else {
+        text = "Pass or Renegotiate";
+        cls = "bg-rose-500 text-slate-50";
+      }
+      badge.textContent = text;
+      badge.className =
+        "px-3 py-1 rounded-full text-xs font-semibold " + cls;
+
+      // --- Strategy badge (HOLD / WHOLESALE / NOVATION / PASS) ---
+      const stratBadge = document.getElementById("seller-strategy-indicator");
+      let stratText = "Strategy: Not Tagged";
+      let stratCls = "bg-slate-800 text-slate-200";
+
+      if (
+        monthlyCashflow >= cfg.minCashflow &&
+        netCashNeeded <= 0 &&
+        cashAtClosing >= cfg.minCashAtClosing
+      ) {
+        stratText = "Strategy: HOLD (Creative Finance)";
+        stratCls = "bg-sky-500 text-slate-900";
+      } else if (
+        netAtClosing >= cfg.minWholesale &&
+        monthlyCashflow < cfg.minCashflow
+      ) {
+        stratText = "Strategy: WHOLESALE";
+        stratCls = "bg-violet-500 text-slate-50";
+      } else if (
+        cashAtClosing >= cfg.minCashAtClosing &&
+        equityPct >= 0.10 &&
+        monthlyCashflow < cfg.minCashflow
+      ) {
+        stratText = "Strategy: NOVATION / HOTELING";
+        stratCls = "bg-amber-400 text-slate-950";
+      } else {
+        stratText = "Strategy: PASS / MOVE ON";
+        stratCls = "bg-slate-700 text-slate-100";
+      }
+
+      stratBadge.textContent = stratText;
+      stratBadge.className =
+        "px-3 py-1 rounded-full text-xs font-semibold " + stratCls;
+
+      // ✅ SUMMARY SENTENCE
+      const summaryElSeller = document.getElementById("seller-strategy-summary");
+      let summarySeller = "";
+
+      if (
+        monthlyCashflow >= cfg.minCashflow &&
+        netCashNeeded <= 0 &&
+        cashAtClosing >= cfg.minCashAtClosing
+      ) {
+        summarySeller =
+          "Strong seller finance hold. " +
+          fmtCurrency(cashAtClosing) +
+          " to you at closing and about " +
+          fmtCurrency(monthlyCashflow) +
+          " per month in cashflow. Lock it up.";
+      } else if (
+        netAtClosing >= cfg.minWholesale &&
+        monthlyCashflow < cfg.minCashflow
+      ) {
+        summarySeller =
+          "Best play: WHOLESALE this seller-finance deal. Target around " +
+          fmtCurrency(netAtClosing) +
+          " at closing.";
+      } else if (
+        cashAtClosing >= cfg.minCashAtClosing &&
+        equityPct >= 0.10 &&
+        monthlyCashflow < cfg.minCashflow
+      ) {
+        summarySeller =
+          "Best play: NOVATION / HOTELING with seller finance terms. Capture equity and about " +
+          fmtCurrency(cashAtClosing) +
+          " at closing.";
+      } else {
+        summarySeller =
+          "Doesn’t meet your buy box yet. Only pursue if you can renegotiate price, down payment, or terms.";
+      }
+
+      summaryElSeller.textContent = summarySeller;
+    }
+
+    document
+      .getElementById("seller-calc-btn")
+      .addEventListener("click", calcSellerFinance);
+
+    // --- Service worker registration (PWA) ---
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("./sw.js")
+          .catch((err) => console.log("SW registration failed", err));
+      });
+    }
+  </script>
+</body>
+</html>
