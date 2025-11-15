@@ -162,10 +162,14 @@
                   <input id="subto-cash-to-seller" type="number" class="field" placeholder="15000" />
                 </div>
               </div>
-              <div class="grid md:grid-cols-4 gap-3 mt-3">
+              <div class="grid md:grid-cols-5 gap-3 mt-3">
                 <div>
                   <label class="block text-xs text-slate-400 mb-1">Closing / Reinstatement Costs ($)</label>
                   <input id="subto-closing-costs" type="number" class="field" placeholder="8000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Repairs to Rent Ready ($)</label>
+                  <input id="subto-repairs" type="number" class="field" placeholder="0" />
                 </div>
                 <div>
                   <label class="block text-xs text-slate-400 mb-1">% of Rent for Vac/Maint</label>
@@ -211,6 +215,81 @@
                 balance / rate / term.
               </p>
             </div>
+
+            <!-- Private Lender Gap Financing -->
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5">
+              <h2 class="text-sm md:text-base font-semibold mb-3 flex items-center justify-between">
+                Private Lender Gap Financing
+                <span class="text-[11px] text-slate-400">
+                  Funds seller lump sum + your cash at closing + repairs
+                </span>
+              </h2>
+              <div class="grid md:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">
+                    Financed Amount ($)
+                  </label>
+                  <input
+                    id="subto-gap-amount"
+                    type="number"
+                    class="field"
+                    placeholder="auto from deal"
+                    readonly
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">
+                    Gap Lender Rate (%)
+                  </label>
+                  <input id="subto-gap-rate" type="number" class="field" placeholder="12" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">
+                    Gap Loan Term (months)
+                  </label>
+                  <input id="subto-gap-term" type="number" class="field" placeholder="12" />
+                </div>
+              </div>
+              <div class="mt-3 flex flex-wrap items-center gap-3 text-xs">
+                <span class="text-slate-400">Payment Type:</span>
+                <label class="inline-flex items-center gap-1 text-slate-300">
+                  <input
+                    type="radio"
+                    name="subto-gap-type"
+                    value="interest"
+                    class="h-3 w-3"
+                    checked
+                  />
+                  <span>Interest-only</span>
+                </label>
+                <label class="inline-flex items-center gap-1 text-slate-300">
+                  <input
+                    type="radio"
+                    name="subto-gap-type"
+                    value="amort"
+                    class="h-3 w-3"
+                  />
+                  <span>Amortizing</span>
+                </label>
+              </div>
+              <div class="mt-3 grid md:grid-cols-2 gap-3 text-xs text-slate-300">
+                <div>
+                  Private Lender Payment (Monthly):
+                  <span id="subto-gap-payment" class="font-semibold">$0</span>
+                </div>
+                <div>
+                  Private Lender Payoff at Term:
+                  <span id="subto-gap-balloon" class="font-semibold">$0</span>
+                </div>
+              </div>
+              <!-- NEW: Gap summary line -->
+              <p
+                id="subto-gap-summary"
+                class="mt-2 text-[11px] md:text-xs text-slate-400"
+              >
+                Enter gap terms to see a summary you can read directly to your private lender.
+              </p>
+            </div>
           </div>
 
           <!-- Right: Income & Expenses + Summary -->
@@ -254,7 +333,7 @@
               <h3 class="font-semibold mb-2">Subject To &amp; Wholesale Summary</h3>
               <ul class="space-y-1 text-slate-300">
                 <li>
-                  Raw Cash Needed (Seller + Closing):
+                  Raw Cash Needed (Seller + Closing + Repairs):
                   <span id="subto-summary-raw-cash" class="font-semibold">$0</span>
                 </li>
                 <li>
@@ -270,7 +349,15 @@
                   <span id="subto-summary-net-closing" class="font-semibold text-emerald-400">$0</span>
                 </li>
                 <li>
-                  Total Monthly Payment (P&amp;I + T/I + HOA + Other):
+                  Private Lender Payment (Monthly):
+                  <span id="subto-summary-gap-payment" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Private Lender Payoff at Term:
+                  <span id="subto-summary-gap-balloon" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Total Monthly Payment (P&amp;I + T/I + HOA + Gap + Other):
                   <span id="subto-summary-total-payment" class="font-semibold">$0</span>
                 </li>
                 <li>
@@ -386,10 +473,14 @@
                   <input id="seller-down" type="number" class="field" placeholder="20000" />
                 </div>
               </div>
-              <div class="grid md:grid-cols-4 gap-3 mt-3">
+              <div class="grid md:grid-cols-5 gap-3 mt-3">
                 <div>
                   <label class="block text-xs text-slate-400 mb-1">Closing Costs ($)</label>
                   <input id="seller-closing-costs" type="number" class="field" placeholder="8000" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Repairs to Rent Ready ($)</label>
+                  <input id="seller-repairs" type="number" class="field" placeholder="0" />
                 </div>
                 <div>
                   <label class="block text-xs text-slate-400 mb-1">% of Rent for Vac/Maint</label>
@@ -437,6 +528,81 @@
                 <span class="font-semibold">Price - Down Payment</span>.
               </p>
             </div>
+
+            <!-- Private Lender Gap Financing -->
+            <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 md:p-5">
+              <h2 class="text-sm md:text-base font-semibold mb-3 flex items-center justify-between">
+                Private Lender Gap Financing
+                <span class="text-[11px] text-slate-400">
+                  Funds seller down, your cash at closing, and repairs
+                </span>
+              </h2>
+              <div class="grid md:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">
+                    Financed Amount ($)
+                  </label>
+                  <input
+                    id="seller-gap-amount"
+                    type="number"
+                    class="field"
+                    placeholder="auto from deal"
+                    readonly
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">
+                    Gap Lender Rate (%)
+                  </label>
+                  <input id="seller-gap-rate" type="number" class="field" placeholder="12" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">
+                    Gap Loan Term (months)
+                  </label>
+                  <input id="seller-gap-term" type="number" class="field" placeholder="12" />
+                </div>
+              </div>
+              <div class="mt-3 flex flex-wrap items-center gap-3 text-xs">
+                <span class="text-slate-400">Payment Type:</span>
+                <label class="inline-flex items-center gap-1 text-slate-300">
+                  <input
+                    type="radio"
+                    name="seller-gap-type"
+                    value="interest"
+                    class="h-3 w-3"
+                    checked
+                  />
+                  <span>Interest-only</span>
+                </label>
+                <label class="inline-flex items-center gap-1 text-slate-300">
+                  <input
+                    type="radio"
+                    name="seller-gap-type"
+                    value="amort"
+                    class="h-3 w-3"
+                  />
+                  <span>Amortizing</span>
+                </label>
+              </div>
+              <div class="mt-3 grid md:grid-cols-2 gap-3 text-xs text-slate-300">
+                <div>
+                  Private Lender Payment (Monthly):
+                  <span id="seller-gap-payment" class="font-semibold">$0</span>
+                </div>
+                <div>
+                  Private Lender Payoff at Term:
+                  <span id="seller-gap-balloon" class="font-semibold">$0</span>
+                </div>
+              </div>
+              <!-- NEW: Gap summary line -->
+              <p
+                id="seller-gap-summary"
+                class="mt-2 text-[11px] md:text-xs text-slate-400"
+              >
+                Enter gap terms to see a summary you can read directly to your private lender.
+              </p>
+            </div>
           </div>
 
           <!-- Right: Income & Summary -->
@@ -480,7 +646,7 @@
               <h3 class="font-semibold mb-2">Seller Finance &amp; Wholesale Summary</h3>
               <ul class="space-y-1 text-slate-300">
                 <li>
-                  Raw Cash Needed (Down + Closing):
+                  Raw Cash Needed (Down + Closing + Repairs):
                   <span id="seller-summary-raw-cash" class="font-semibold">$0</span>
                 </li>
                 <li>
@@ -496,12 +662,24 @@
                   <span id="seller-summary-net-closing" class="font-semibold text-emerald-400">$0</span>
                 </li>
                 <li>
+                  Private Lender Payment (Monthly):
+                  <span id="seller-summary-gap-payment" class="font-semibold text-emerald-400">$0</span>
+                </li>
+                <li>
+                  Private Lender Payoff at Term:
+                  <span id="seller-summary-gap-balloon" class="font-semibold">$0</span>
+                </li>
+                <li>
                   Monthly Payment (P&amp;I Only):
                   <span id="seller-summary-payment" class="font-semibold">$0</span>
                 </li>
                 <li>
                   Balloon Amount (End of Term):
                   <span id="seller-summary-balloon" class="font-semibold">$0</span>
+                </li>
+                <li>
+                  Total Monthly Payment (Note + T/I + HOA + Gap + Other):
+                  <span id="seller-summary-total-payment" class="font-semibold">$0</span>
                 </li>
                 <li>
                   Monthly Cashflow:
@@ -614,6 +792,28 @@
       return principal * Math.pow(1 + r, t) - pmt * ((Math.pow(1 + r, t) - 1) / r);
     }
 
+    // Gap loan monthly payment + payoff (term in months)
+    function calcGapLoan(loanAmount, annualRate, termMonths, type) {
+      if (loanAmount <= 0 || annualRate < 0 || termMonths <= 0) {
+        return { payment: 0, balloon: 0 };
+      }
+      const r = annualRate / 100 / 12;
+      if (type === "interest") {
+        const payment = loanAmount * r;
+        const balloon = loanAmount;
+        return { payment, balloon };
+      } else {
+        // amortizing to zero over termMonths
+        if (r === 0) {
+          const payment = loanAmount / termMonths;
+          return { payment, balloon: 0 };
+        }
+        const payment =
+          (loanAmount * r) / (1 - Math.pow(1 + r, -termMonths));
+        return { payment, balloon: 0 };
+      }
+    }
+
     // --- Tabs ---
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -655,7 +855,6 @@
     v1Btn.addEventListener("click", () => {
       currentBuyBox = "v1";
       updateBuyBoxButtons();
-      // Recalc current tab with new thresholds
       if (currentTab === "subto") {
         calcSubjectTo();
       } else {
@@ -683,6 +882,7 @@
       const price = num("subto-purchase-price");
       const cashToSeller = num("subto-cash-to-seller");
       const closingCosts = num("subto-closing-costs");
+      const repairs = num("subto-repairs");
       const loanBalance = num("subto-loan-balance");
       const rate = num("subto-loan-rate");
       const years = num("subto-loan-years");
@@ -704,18 +904,34 @@
         document.getElementById("subto-loan-payment").value = Math.round(loanPayment);
       }
 
+      // Gap loan amount = seller lump sum + your cash at closing + repairs
+      const gapAmount = cashToSeller + cashAtClosing + repairs;
+      const gapRate = num("subto-gap-rate");
+      const gapTerm = num("subto-gap-term");
+      const gapTypeEl = document.querySelector('input[name="subto-gap-type"]:checked');
+      const gapType = gapTypeEl ? gapTypeEl.value : "interest";
+
+      if (gapAmount > 0) {
+        document.getElementById("subto-gap-amount").value = Math.round(gapAmount);
+      } else {
+        document.getElementById("subto-gap-amount").value = "";
+      }
+
+      const { payment: gapPayment, balloon: gapBalloon } =
+        calcGapLoan(gapAmount, gapRate, gapTerm, gapType);
+
       const vacMaint = rent * vacMaintPct;
       const totalExpenses =
-        loanPayment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint;
+        loanPayment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint + gapPayment;
 
       const monthlyCashflow = rent - totalExpenses;
       const annualCashflow = monthlyCashflow * 12;
 
-      const rawCashNeeded = cashToSeller + closingCosts;
-      const netCashNeeded = rawCashNeeded - cashAtClosing; // can be negative (you get paid)
-      const netAtClosing = cashAtClosing - rawCashNeeded;  // wholesale profit
+      const rawCashNeeded = cashToSeller + closingCosts + repairs;
+      const netCashNeeded = rawCashNeeded - cashAtClosing;
+      const netAtClosing = cashAtClosing - rawCashNeeded;
 
-      const equityAtPurchase = arv - (loanBalance + cashToSeller + closingCosts);
+      const equityAtPurchase = arv - (loanBalance + cashToSeller + closingCosts + repairs);
       const equityPct = arv > 0 ? equityAtPurchase / arv : 0;
 
       const coc = netCashNeeded > 0 ? annualCashflow / netCashNeeded : 0;
@@ -738,6 +954,10 @@
         fmtCurrency(netCashNeeded);
       document.getElementById("subto-summary-net-closing").textContent =
         fmtCurrency(netAtClosing);
+      document.getElementById("subto-summary-gap-payment").textContent =
+        fmtCurrency(gapPayment);
+      document.getElementById("subto-summary-gap-balloon").textContent =
+        fmtCurrency(gapBalloon);
       document.getElementById("subto-summary-total-payment").textContent =
         fmtCurrency(totalExpenses);
       document.getElementById("subto-summary-cashflow").textContent =
@@ -748,6 +968,40 @@
         fmtPercent(coc);
       document.getElementById("subto-summary-equity").textContent =
         fmtCurrency(equityAtPurchase);
+
+      // Gap outputs card
+      document.getElementById("subto-gap-payment").textContent =
+        fmtCurrency(gapPayment);
+      document.getElementById("subto-gap-balloon").textContent =
+        fmtCurrency(gapBalloon);
+
+      // Gap summary sentence
+      const subGapSummaryEl = document.getElementById("subto-gap-summary");
+      if (gapAmount > 0 && gapRate > 0 && gapTerm > 0) {
+        const typeLabel =
+          gapType === "interest" ? "interest-only" : "amortizing";
+        const payoffText =
+          gapBalloon > 0
+            ? fmtCurrency(gapBalloon) + " payoff"
+            : "$0 remaining at term";
+        subGapSummaryEl.textContent =
+          "Gap loan: " +
+          fmtCurrency(gapAmount) +
+          " at " +
+          gapRate.toFixed(2) +
+          "% for " +
+          gapTerm +
+          " months (" +
+          typeLabel +
+          ") → " +
+          fmtCurrency(gapPayment) +
+          "/mo, " +
+          payoffText +
+          ".";
+      } else {
+        subGapSummaryEl.textContent =
+          "Enter gap amount, rate, and term to see the private lender payment and payoff summary.";
+      }
 
       // --- Main deal indicator (uses current buy box thresholds) ---
       const badge = document.getElementById("subto-deal-indicator");
@@ -785,14 +1039,12 @@
         netCashNeeded <= 0 &&
         cashAtClosing >= cfg.minCashAtClosing
       ) {
-        // Strong cashflow, none of your own cash in, nice lump sum
         stratText = "Strategy: HOLD (Creative Finance)";
         stratCls = "bg-sky-500 text-slate-900";
       } else if (
         netAtClosing >= cfg.minWholesale &&
         monthlyCashflow < cfg.minCashflow
       ) {
-        // Big wholesale check, but not a strong hold
         stratText = "Strategy: WHOLESALE";
         stratCls = "bg-violet-500 text-slate-50";
       } else if (
@@ -800,7 +1052,6 @@
         equityPct >= 0.10 &&
         monthlyCashflow < cfg.minCashflow
       ) {
-        // Strong equity and payday, but not a great long-term cash machine
         stratText = "Strategy: NOVATION / HOTELING";
         stratCls = "bg-amber-400 text-slate-950";
       } else {
@@ -822,7 +1073,7 @@
         cashAtClosing >= cfg.minCashAtClosing
       ) {
         summarySub =
-          "Strong creative hold. " +
+          "Strong creative hold even with private money. " +
           fmtCurrency(cashAtClosing) +
           " to you at closing and about " +
           fmtCurrency(monthlyCashflow) +
@@ -834,19 +1085,17 @@
         summarySub =
           "Best play: WHOLESALE. Target around " +
           fmtCurrency(netAtClosing) +
-          " at closing. Don’t keep this one as a long-term hold.";
+          " at closing. Gap lender gets paid off when your buyer closes.";
       } else if (
         cashAtClosing >= cfg.minCashAtClosing &&
         equityPct >= 0.10 &&
         monthlyCashflow < cfg.minCashflow
       ) {
         summarySub =
-          "Best play: NOVATION / HOTELING. Use creative terms, improve the property, and exit for equity plus about " +
-          fmtCurrency(cashAtClosing) +
-          " at closing.";
+          "Best play: NOVATION / HOTELING. Use gap money to fund seller, your check, and repairs, then exit and pay off the private lender.";
       } else {
         summarySub =
-          "Doesn’t meet your buy box yet. Only pursue if you can improve price or terms enough to boost cashflow or wholesale profit.";
+          "Doesn’t meet your buy box yet, especially after private money cost. Only pursue if you can improve price or terms.";
       }
 
       summaryElSub.textContent = summarySub;
@@ -864,6 +1113,7 @@
       const price = num("seller-purchase-price");
       const down = num("seller-down");
       const closingCosts = num("seller-closing-costs");
+      const repairs = num("seller-repairs");
       const vacMaintPct = num("seller-vac-maint-pct") / 100;
       const otherExp = num("seller-other-exp");
 
@@ -891,14 +1141,30 @@
           ? calcPayment(loanAmount, rate, amortYears)
           : 0;
 
+      // Gap loan amount = down + your cash at closing + repairs
+      const gapAmount = down + cashAtClosing + repairs;
+      const gapRate = num("seller-gap-rate");
+      const gapTerm = num("seller-gap-term");
+      const gapTypeEl = document.querySelector('input[name="seller-gap-type"]:checked');
+      const gapType = gapTypeEl ? gapTypeEl.value : "interest";
+
+      if (gapAmount > 0) {
+        document.getElementById("seller-gap-amount").value = Math.round(gapAmount);
+      } else {
+        document.getElementById("seller-gap-amount").value = "";
+      }
+
+      const { payment: gapPayment, balloon: gapBalloon } =
+        calcGapLoan(gapAmount, gapRate, gapTerm, gapType);
+
       const vacMaint = rent * vacMaintPct;
       const totalExpenses =
-        payment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint;
+        payment + taxesIns + hoa + mgmtUtils + otherExp + vacMaint + gapPayment;
 
       const monthlyCashflow = rent - totalExpenses;
       const annualCashflow = monthlyCashflow * 12;
 
-      const rawCashNeeded = down + closingCosts;
+      const rawCashNeeded = down + closingCosts + repairs;
       const netCashNeeded = rawCashNeeded - cashAtClosing;
       const netAtClosing = cashAtClosing - rawCashNeeded;
 
@@ -907,7 +1173,7 @@
 
       const coc = netCashNeeded > 0 ? annualCashflow / netCashNeeded : 0;
 
-      // Balloon balance at end of term
+      // Balloon balance at end of seller balloon term
       const balloon =
         loanAmount > 0 && rate >= 0 && amortYears > 0 && balloonYears > 0
           ? remainingBalance(loanAmount, rate, amortYears, balloonYears)
@@ -931,10 +1197,16 @@
         fmtCurrency(netCashNeeded);
       document.getElementById("seller-summary-net-closing").textContent =
         fmtCurrency(netAtClosing);
+      document.getElementById("seller-summary-gap-payment").textContent =
+        fmtCurrency(gapPayment);
+      document.getElementById("seller-summary-gap-balloon").textContent =
+        fmtCurrency(gapBalloon);
       document.getElementById("seller-summary-payment").textContent =
         fmtCurrency(payment);
       document.getElementById("seller-summary-balloon").textContent =
         fmtCurrency(balloon);
+      document.getElementById("seller-summary-total-payment").textContent =
+        fmtCurrency(totalExpenses);
       document.getElementById("seller-summary-cashflow").textContent =
         fmtCurrency(monthlyCashflow);
       document.getElementById("seller-summary-annual").textContent =
@@ -943,6 +1215,40 @@
         fmtPercent(coc);
       document.getElementById("seller-summary-equity").textContent =
         fmtCurrency(equityAtPurchase);
+
+      // Gap outputs card
+      document.getElementById("seller-gap-payment").textContent =
+        fmtCurrency(gapPayment);
+      document.getElementById("seller-gap-balloon").textContent =
+        fmtCurrency(gapBalloon);
+
+      // Gap summary sentence
+      const sellerGapSummaryEl = document.getElementById("seller-gap-summary");
+      if (gapAmount > 0 && gapRate > 0 && gapTerm > 0) {
+        const typeLabel =
+          gapType === "interest" ? "interest-only" : "amortizing";
+        const payoffText =
+          gapBalloon > 0
+            ? fmtCurrency(gapBalloon) + " payoff"
+            : "$0 remaining at term";
+        sellerGapSummaryEl.textContent =
+          "Gap loan: " +
+          fmtCurrency(gapAmount) +
+          " at " +
+          gapRate.toFixed(2) +
+          "% for " +
+          gapTerm +
+          " months (" +
+          typeLabel +
+          ") → " +
+          fmtCurrency(gapPayment) +
+          "/mo, " +
+          payoffText +
+          ".";
+      } else {
+        sellerGapSummaryEl.textContent =
+          "Enter gap amount, rate, and term to see the private lender payment and payoff summary.";
+      }
 
       // --- Main deal indicator with buy box thresholds ---
       const badge = document.getElementById("seller-deal-indicator");
@@ -1014,7 +1320,7 @@
         cashAtClosing >= cfg.minCashAtClosing
       ) {
         summarySeller =
-          "Strong seller finance hold. " +
+          "Strong seller finance hold even with private money. " +
           fmtCurrency(cashAtClosing) +
           " to you at closing and about " +
           fmtCurrency(monthlyCashflow) +
@@ -1026,19 +1332,17 @@
         summarySeller =
           "Best play: WHOLESALE this seller-finance deal. Target around " +
           fmtCurrency(netAtClosing) +
-          " at closing.";
+          " at closing and pay the gap lender off at disposition.";
       } else if (
         cashAtClosing >= cfg.minCashAtClosing &&
         equityPct >= 0.10 &&
         monthlyCashflow < cfg.minCashflow
       ) {
         summarySeller =
-          "Best play: NOVATION / HOTELING with seller finance terms. Capture equity and about " +
-          fmtCurrency(cashAtClosing) +
-          " at closing.";
+          "Best play: NOVATION / HOTELING with seller finance terms. Use private money for down + repairs, then exit and clear the gap loan.";
       } else {
         summarySeller =
-          "Doesn’t meet your buy box yet. Only pursue if you can renegotiate price, down payment, or terms.";
+          "Doesn’t meet your buy box yet after private lender cost. Only pursue if you can renegotiate price, down payment, or terms.";
       }
 
       summaryElSeller.textContent = summarySeller;
